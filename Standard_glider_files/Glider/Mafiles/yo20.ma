@@ -32,7 +32,7 @@ behavior_name=yo
                                                 # 2  Command input voltage (as % of max thruster input voltage)
                                                 # 3  Command depth rate.  See sensors for use_thruster = depthrate
                                                 # 4  Command input power. See sensors for use_thruster = power
-            # b_arg: d_thruster_value(X) 0.18 	# 3 rate (m/s), was 0.05 (actual rate=0.15)
+            # b_arg: d_thruster_value(X) 0.05 	# 3 rate (m/s)
 		# THRUSTER USE Watts
             # b_arg: d_use_thruster(enum) 4 	# enum 4 - specify value in Watts
             # b_arg: d_thruster_value(X) 5 		# Value in Watts
@@ -59,7 +59,7 @@ behavior_name=yo
         # THRUSTER USE depth rate
             
             # b_arg: c_use_thruster(enum) 3 	# 3 specify depth rate
-            # b_arg: c_thruster_value(X) -0.15 	# 3 rate (m/s), was -0.05
+            # b_arg: c_thruster_value(X) -0.05 	# 3 rate (m/s)
 			
 		# THRUSTER USE watts	
             # b_arg: c_use_thruster(enum) 4 	# enum 4 - specify value in Watts
