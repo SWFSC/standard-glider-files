@@ -1,4 +1,4 @@
-# Standard_glider_files
+# Standard-glider-files
 A repository for standard files that are put on all US AMLR Slocum gliders before deployment. These files can then be edited for the specific mission and specific glider payload. 
 
 
