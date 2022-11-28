@@ -50,7 +50,7 @@ behavior_name=yo
         # Advanced Flight Controls
             # Ballast Pump Controls
                 b_arg:  c_use_bpump(enum)    	0	# see d_use_bpump(enum) above
-            	b_arg:  c_bpump_value(X)   800	    # Comment in if using autoballast for processor gliders, out for persistor gliders
+            	b_arg:  c_bpump_value(X)   400	    # Comment in if using autoballast for processor gliders, out for persistor gliders
 
             # Dive Angle Arguments (using AP)
                 b_arg:  c_use_pitch(enum)	3		# see d_use_pitch(enum) above
