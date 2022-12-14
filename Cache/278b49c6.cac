@@ -1,0 +1,4 @@
+s: T    0    0 1 sci_m_science_on bool
+s: T    1    1 4 sci_reqd_heartbeat secs
+s: T    2    2 1 sci_sbmb_hw_ver enum
+s: T    3    3 4 sci_software_ver nodim
