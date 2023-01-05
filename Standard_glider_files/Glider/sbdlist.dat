@@ -85,4 +85,5 @@
 			   m_thruster_cycles
 			    m_thruster_power  180
                   c_thruster_on   180
+				      m_battery   180
 			   
