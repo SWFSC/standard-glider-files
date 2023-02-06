@@ -47,7 +47,7 @@ behavior: abend
     b_arg: max_wpt_distance(m)              50000 # Maximum allowable distance to a waypoint
 
     b_arg: max_allowable_busy_cpu_cycles(cycles)	75
-    #b_arg: reqd_spare_heap(bytes)      30000  # added from talking with glidersupport 7/24/19 due to 8.3
+   #b_arg: reqd_spare_heap(bytes)      30000  # added from talking with glidersupport 7/24/19 due to 8.3 # Only for persistor gliders
 
 
 # SURFACE : Nothing commanded
