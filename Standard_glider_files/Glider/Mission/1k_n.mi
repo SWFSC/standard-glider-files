@@ -8,6 +8,7 @@
 # 2019- 10-21 acossio   added u_abort_max_burn_time for 12 hours
 # 2019-11-08 jwalsh added max lag before syncing time per Teledyne instructions until GPS firmware update can be installed
 # 2022-Nov-15 ACossio stock 1k_n.mi file
+# 2023-05-17 acossio added arguments for dealing with dense surface krill
 
 sensor: c_science_all_on_enabled(bool)          	0   # 0 control science individually 
 sensor: c_science_send_all(bool)		      		0   # just send standard subset but still log them all on science.
@@ -17,7 +18,13 @@ sensor: u_use_current_correction(nodim)  1  #  0 calculate, but do not use m_wat
                                             #  1 use m_water_vx/y to navigate AND steer
 sensor:	u_alt_min_depth(m)	35.0	# how deep glider must be to use the altimeter
 sensor: u_abort_max_burn_time(sec) 		43200 # 12 hours Always drop the weight after this time
-#sensor: u_max_lag_before_syncing_time(sec)  648345600 # per Teledyne instructions until GPS firmware update #Only for persistor gliders
+sensor: u_max_lag_before_syncing_time(sec)  648345600 # per Teledyne instructions until GPS firmware update #Only for persistor gliders
+
+# For dealing with dense surface krill per David Aragon
+sensor: u_max_water_depth_lifetime(yos) 0  # 
+sensor: u_alt_reqd_good_in_a_row(nodim) 4      # how many in a row we require before accepting reading
+sensor: u_reqd_depth_at_surface(m) 3   # less than this is considered "at surface"
+# sensor: u_min_water_depth(m) 50   #in, altimeter reading + M_DEPTH must be between this and u_max_water_depth
 
 # ABORT BEHAVIOR
 behavior: abend
@@ -47,7 +54,7 @@ behavior: abend
     b_arg: max_wpt_distance(m)              50000 # Maximum allowable distance to a waypoint
 
     b_arg: max_allowable_busy_cpu_cycles(cycles)	75
-   #b_arg: reqd_spare_heap(bytes)      30000  # added from talking with glidersupport 7/24/19 due to 8.3 # Only for persistor gliders
+   b_arg: reqd_spare_heap(bytes)      30000  # added from talking with glidersupport 7/24/19 due to 8.3 # Only for persistor gliders
 
 
 # SURFACE : Nothing commanded
@@ -99,22 +106,22 @@ behavior: sample
 	b_arg: args_from_file(enum)		64	# c_ad2cp_on
 	
 # SAMPLE : AZFP - set to sample
-behavior: sample
-	b_arg: args_from_file(enum)		68	# c_azfp_on
+#behavior: sample
+#	b_arg: args_from_file(enum)		68	# c_azfp_on
 	
 # SAMPLE : Williamson camera -set to sample
 behavior: sample
 	b_arg: args_from_file(enum)		85	# c_solocam_on	On persistor glider ver 8.6
 		
 # SAMPLE : Williamson camera -set to sample
-behavior: sample
-	b_arg: args_from_file(enum)		87	# c_solocam_on On STM glider ver 10+
+#behavior: sample
+#	b_arg: args_from_file(enum)		87	# c_solocam_on On STM glider ver 10+
 
 
-# PREPARE TO DIVE : wait 12 min for GPS
+# PREPARE TO DIVE : wait 2 min for GPS
 behavior: prepare_to_dive
     b_arg: start_when(enum)         0   # 0-immediately
-    b_arg: wait_time(sec)           720 # wait time
+    b_arg: wait_time(sec)           120 # wait time
 
 
 # SENSORS_IN : not sure what this does, assuming remaining sensor update
