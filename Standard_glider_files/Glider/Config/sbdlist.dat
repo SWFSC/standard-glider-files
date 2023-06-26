@@ -17,6 +17,7 @@
                     f_fin_offset
             f_ocean_pressure_max
             f_ocean_pressure_min
+					  m_altitude	30	   3     1
                      m_avg_speed  1800
                   m_battery_inst  1800
                        m_battpos   360    15     2
