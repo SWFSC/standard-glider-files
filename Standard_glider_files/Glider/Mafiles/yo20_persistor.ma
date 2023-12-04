@@ -23,7 +23,7 @@ behavior_name=yo
 													# 3  Servo on Pitch
 													# 2  Pitch, set once from curve
 													# 1  BattPos
-                b_arg:  d_pitch_value(X)    -0.401  # 23 degrees
+                b_arg:  d_pitch_value(X)    -0.401  # 23 degrees 26 deg for Nortek 0.454: 23deg for AZFP 0.401
 
 
           # THRUSTER USE depth rate
