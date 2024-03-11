@@ -19,6 +19,7 @@ sensor: u_use_current_correction(nodim)  1  #  0 calculate, but do not use m_wat
 sensor:	u_alt_min_depth(m)	35.0	# how deep glider must be to use the altimeter
 sensor: u_abort_max_burn_time(sec) 		43200 # 12 hours Always drop the weight after this time
 sensor: u_max_lag_before_syncing_time(sec)  648345600 # per Teledyne instructions until GPS firmware update #Only for persistor gliders
+# sensor: u_use_file_compression(bool) 0  # 0 disables compression, 1 enables compression  #Ony for STM gliders
 
 # For dealing with dense surface krill per David Aragon
 sensor: u_max_water_depth_lifetime(yos) 0  # 
