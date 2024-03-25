@@ -1,0 +1,579 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+Date			Author					Comments
+2016-05-12 mark.worden@teledyne.com     New SFMC Dock Server script similar to the glmpc-archive.xml except 
+										that it also performs a Ctrl-W before the Ctrl-R
+2017-12-21 mark.worden@teledyne.com     Updated to also issue dockszr to transmit science files
+-->
+
+<!--
+Purpose: Used during a mission to transfer sbd and tbd files to the dockserver, transfer files in the 
+to-glider and to-science folders to the glider, and then re-read the mission files, request device info 
+and resume the mission. Since a freewave or iridium connection is assumed, this script should not be 
+used when using to control direct connected gliders.
+
+Dependency: Assumes a freewave or iridium connection to the glider.
+
+For use with SFMC dockserver version 8.x and up.
+
+Note: This script has transitions based on loss of Carrier Detect.  It may not behave correctly with
+communications that do NOT support Carrier Detect.
+-->
+
+<gliderScript>
+	<!-- The start state of the script.  It attempts to send an initial any mission files to the glider.
+	-->
+	<initialState name="initialDockzr">
+		<transitions>
+			<transition matchExpression="" toState="verifyInitialDockzr">
+				<action type="glider" command="dockzr -archive *">
+				</action>
+			</transition>
+			<!-- When a surface dialog is seen, send the "s" command and then verify its receipt
+			by the glider.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzModem">
+				<action type="glider" command="s *.sbd *.tbd">
+				</action>
+			</transition>
+		</transitions>
+	</initialState>
+
+
+	<!-- This state verifies that the "dockzr" command was received by the glider.
+	-->
+	<state name="verifyInitialDockzr">
+		<transitions>
+			<!-- If the file was not found, resume the mission.
+			-->
+			<transition matchExpression="not found" toState="initialDockszr">
+			</transition>
+			<!-- If the transfer was successful, go send the reload ma command.
+			-->
+			<transition matchExpression="Done!" toState="initialDockszr">
+			</transition>
+			<!-- If messages above are not seen within 1 minute, go to the sendzModem state
+			-->
+			<transition timeout="1" toState="initialDockszr">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state attempts to send an initial any science related mission files to the glider.
+	-->
+	<state name="initialDockszr">
+		<transitions>
+			<!-- When a surface dialog is seen, send the "s" command and then verify its receipt
+			by the glider.
+			-->
+			<transition matchExpression="" toState="verifyInitialDockszr">
+				<action type="glider" command="dockszr -archive *">
+				</action>
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state verifies that the "dockzr" command was received by the glider.
+	-->
+	<state name="verifyInitialDockszr">
+		<transitions>
+			<!-- If the file was not found, resume the mission.
+			-->
+			<transition matchExpression="not found" toState="sendzModem">
+			</transition>
+			<!-- If the transfer was successful, go send the reload ma command.
+			-->
+			<transition matchExpression="Done!" toState="sendzModem">
+			</transition>
+			<transition matchExpression="GliderDos" toState="sendzModem">
+			</transition>
+			<!-- If messages above are not seen within 10 minutes, go to the sendzModem state
+			-->
+			<transition timeout="10" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- Waits for a surface dialog and then sends the "s" command.
+	-->
+	<state name="sendzModem">
+		<transitions>
+			<!-- When a surface dialog is seen, send the "s" command and then verify its receipt
+			by the glider.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzModem">
+				<action type="glider" command="s *.sbd *.tbd">
+				</action>
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state verifies that the "s" command was received by the glider.
+	-->
+	<state name="verifyzModem">
+		<transitions>
+			<!-- If a surface dialog is seen after the "s" command is sent, comsume it by matching
+			it and remaining in this state.  Due to timing over Iridium, more than one surface dialog may
+			be seen between sending the glider a command and seeing that command's echo.
+			While perhaps not absolutely necessary to this script, this transition helps
+			keep the script in sync with what's happening on the glider as indicated by its console output.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzModem">
+			</transition>
+			<!-- If the "s" command fails to verify - i.e., an echo of the sent command is not seen by the
+			dockserver within a specified time (~ 20 sec), then attempt to resend the command.
+			-->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendzModem">
+			</transition>
+			<!-- If the sent "s" command is seen, go wait for the zModem transfer to complete.
+			-->
+			<transition matchExpression="s \*.sbd \*.tbd" toState="waitForTransfer">
+			</transition>
+			<!-- If the glider connection is dropped, attempt to resend the command when the next surface
+			dialog is seen.
+			-->
+			<transition matchExpression="Connection Event: Carrier Detect lost." toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!--	This state looks for indications of zModem transfer success or failure.  Note that adding a timeout
+			transition out of this state is dangerous since the time required for a zModem transfer is unknown and
+			highly variable.
+			-->
+	<state name="waitForTransfer">
+		<transitions>
+			<!-- If a surface dialog is seen, assume the "s" command was missed by the glider or that
+			the glider connection dropped (possibly cancelling the transfer) and it called back - either on
+			the next surfacing or the same surfacing.  Resend the command and attempt to verify it was received.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzModem">
+				<action type="glider" command="s *.sbd *.tbd">
+				</action>
+			</transition>
+			<!-- skip to wait for glider side transfer
+			-->
+			<transition matchExpression="SCIENCE DATA LOGGING:" toState="waitForNewTypeGliderSideTransfer">
+			</transition>
+			<!-- If science data logging is not present at all, handle old type glider-only transfer
+			-->
+			<transition matchExpression="Enumerating and selecting" toState="waitForOldTypeGliderOnlyTransfer">
+			</transition>
+		</transitions>
+	</state>
+
+	<!-- This state looks for indications of zModem transfer success or failure for new type glider side transfer.
+	Note that adding a timeout transition out of this state is dangerous since the time required for a zModem
+	transfer is unknown and highly variable.
+	-->
+	<state name="waitForNewTypeGliderSideTransfer">
+		<transitions>
+			<!-- If a surface dialog is seen, assume the "s" command was missed by the glider or that
+			the glider connection dropped (possibly cancelling the transfer) and it called back - either on
+			the next surfacing or the same surfacing.  Resend the command and attempt to verify it was received.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzModem">
+				<action type="glider" command="s *.sbd *.tbd">
+				</action>
+			</transition>
+			<!-- If the zModem transfer was successful, go send the next command.
+			-->
+			<transition matchExpression="GLD: SUCCESS" toState="sendzrma">
+			</transition>
+			<!-- If there were no files to transfer, go send the next command.
+			-->
+			<transition matchExpression="GLD: NO TRANSMISSION" toState="sendzrma">
+			</transition>
+			<!-- If the transfer explicitly failed, do not attempt to resend the command (it may fail
+			indefinately many times) and go send the next command.
+			-->
+			<transition matchExpression="GLD: Error sending files" toState="sendzrma">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state looks for indications of zModem transfer success or failure for old type glider-only transfer.
+	Note that adding a timeout transition out of this state is dangerous since the time required for a zModem
+	transfer is unknown and highly variable.
+	-->
+	<state name="waitForOldTypeGliderOnlyTransfer">
+		<transitions>
+			<!-- If a surface dialog is seen, assume the "s" command was missed by the glider or that
+			the glider connection dropped (possibly cancelling the transfer) and it called back - either on
+			the next surfacing or the same surfacing.  Resend the command and attempt to verify it was received.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzModem">
+				<action type="glider" command="s *.sbd *.tbd">
+				</action>
+			</transition>
+			<!-- If the zModem transfer was successful, go send the next command.
+			-->
+			<transition matchExpression="SUCCESS" toState="sendzrma">
+			</transition>
+			<!-- If there were no files to transfer, go send the next command.
+			-->
+			<transition matchExpression="NO TRANSMISSION" toState="sendzrma">
+			</transition>
+			<!-- If the transfer explicitly failed, do not attempt to resend the command (it may fail
+			indefinately many times) and go send the next command.
+			-->
+			<transition matchExpression="Error sending files" toState="sendzrma">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state attempts to send a file to the glider using the "!zr" command.
+	-->
+	<state name="sendzrma">
+		<transitions>
+			<!-- If a surface dialog is seen, assume the glider is ready to receive a command and
+			send the "!zr" command.  Go verify it was received.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzrma">
+				<action type="glider" command="!dockzr -archive *">
+				</action>
+			</transition>
+			<!-- If no surface dialog is seen for 10 minutes, assume the glider has dove and will
+			not reconnect to the dockserver until the next surfacing.  To be ready for that next surfacing,
+			go to the initial state of this script.
+			-->
+			<transition timeout="10" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state verifies that the "!zr" command was received by the glider.
+	-->
+	<state name="verifyzrma">
+		<transitions>
+			<!-- If a surface dialog is seen after the "!zr" command is sent, comsume it by matching
+			it and remaining in this state.  Due to timing over Iridium, more than one surface dialog may
+			be seen between sending the glider a command and seeing that command's echo.
+			While perhaps not absolutely necessary to this script, this transition helps
+			keep the script in sync with what's happening on the glider as indicated by its console output.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzrma">
+			</transition>
+			<!-- If the "!zr" command fails to verify - i.e., an echo of the sent command is not seen by the
+			dockserver within a specified time (~ 20 sec), then attempt to resend the command.
+			-->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendzrma">
+			</transition>
+			<!-- If the command echo is seen, go wait for the zModem transfer to complete.
+			-->
+			<transition matchExpression="!zr" toState="waitForzrma">
+			</transition>
+			<!-- If the file was not found, resume the mission.
+			-->
+			<transition matchExpression="not found" toState="sendszr">
+			</transition>
+			<!-- If the glider connection is dropped, attempt to resend the command when the next surface
+			dialog is seen.
+			-->
+			<transition matchExpression="Connection Event: Carrier Detect lost." toState="sendzrma">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state looks for indications of zModem transfer success or failure.  Note that adding a timeout
+	transition out of this state is dangerous since the time required for a zModem transfer is unknown and
+	highly variable.
+	-->
+	<state name="waitForzrma">
+		<transitions>
+			<!-- If a surface dialog is seen, assume the "!zr" command was missed by the glider or that
+			the glider connection dropped (possibly cancelling the transfer) and it called back - either on
+			the next surfacing or the same surfacing.  Resend the command and attempt to verify it was received.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzrma">
+				<action type="glider" command="!dockzr -archive *">
+				</action>
+			</transition>
+			<!-- If the transfer was successful, go send the reload ma command.
+			-->
+			<transition matchExpression="Done!" toState="sendReloadma">
+			</transition>
+			<!-- If the transfer explicitly failed, assume it would repeatedly fail.  So do not resend and
+			go send the next command.
+			-->
+			<transition matchExpression="FAILED: zr" toState="sendszr">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state send a Ctrl-F to cause the glider to reread mafiles.
+	-->
+	<state name="sendReloadma">
+		<transitions>
+			<!-- If a surface dialog is seen, assume the glider is ready to receive a command and send
+			the Ctrl-F.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="waitForReloadma">
+				<action type="glider" command="Ctrl-F">
+				</action>
+			</transition>
+			<!-- If no indication of success or failure is seen within 10 minutes, assume the glider dove.  Go
+			to the script's first state in preparation for the next surfacing.
+			-->
+			<transition timeout="10" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state looks for indications of Ctrl-F success or failure.
+	-->
+	<state name="waitForReloadma">
+		<transitions>
+			<!-- If the Ctrl-F command failed to verify - i.e., the dockserver did not see an echo of
+			the command within ~20 sec of sending it, then attempt to resend it.
+			-->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendReloadma">
+			</transition>
+			<!-- Once the Ctrl-F is confirmed, go send a Ctrl-R to resume the mission.
+			-->
+			<transition matchExpression="MAFILES will be re-read" toState="sendszr">
+			</transition>
+			<!-- If no indication of success or failure is seen within 10 minutes, assume the glider dove.  Go
+			to the script's first state in preparation for the next surfacing.
+			-->
+			<transition timeout="10" toState="sendzModem">
+			</transition>
+			<!-- If a surface dialog is seen after sending the Ctrl-F but before an indication of its success, assume
+			the command was missed by the glider.  Resend it and wait for success or failure.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="waitForReloadma">
+				<action type="glider" command="Ctrl-F">
+				</action>
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state attempts to send a file to the glider using the "!szr" command.
+	-->
+	<state name="sendszr">
+		<transitions>
+			<!-- If a surface dialog is seen, assume the glider is ready to receive a command and
+			send the "!zr" command.  Go verify it was received.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyszr">
+				<action type="glider" command="!dockszr -archive *">
+				</action>
+			</transition>
+			<!-- If no surface dialog is seen for 10 minutes, assume the glider has dove and will
+			not reconnect to the dockserver until the next surfacing.  To be ready for that next surfacing,
+			go to the initial state of this script.
+			-->
+			<transition timeout="10" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state verifies that the "!szr" command was received by the glider.
+	-->
+	<state name="verifyszr">
+		<transitions>
+			<!-- If a surface dialog is seen after the "!szr" command is sent, comsume it by matching
+			it and remaining in this state.  Due to timing over Iridium, more than one surface dialog may
+			be seen between sending the glider a command and seeing that command's echo.
+			While perhaps not absolutely necessary to this script, this transition helps
+			keep the script in sync with what's happening on the glider as indicated by its console output.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyszr">
+			</transition>
+			<!-- If the "!zr" command fails to verify - i.e., an echo of the sent command is not seen by the
+			dockserver within a specified time (~ 20 sec), then attempt to resend the command.
+			-->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendszr">
+			</transition>
+			<!-- If the command echo is seen, go wait for the zModem transfer to complete.
+			-->
+			<transition matchExpression="!szr" toState="waitForszr">
+			</transition>
+			<!-- If the file was not found, resume the mission.
+			-->
+			<transition matchExpression="not found" toState="sendCtrlW">
+			</transition>
+			<!-- If the glider connection is dropped, attempt to resend the command when the next surface
+			dialog is seen.
+			-->
+			<transition matchExpression="Connection Event: Carrier Detect lost." toState="sendszr">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state looks for indications of science zModem transfer success or failure.  Note that adding a 
+	timeout transition out of this state is dangerous since the time required for a zModem transfer is unknown
+	and highly variable.
+	-->
+	<state name="waitForszr">
+		<transitions>
+			<!-- If a surface dialog is seen, assume the "!szr" command was missed by the glider or that
+			the glider connection dropped (possibly cancelling the transfer) and it called back - either on
+			the next surfacing or the same surfacing.  Resend the command and attempt to verify it was received.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyszr">
+				<action type="glider" command="!dockszr -archive *">
+				</action>
+			</transition>
+			<!-- If the transfer was successful, go send the reload ma command.
+			-->
+			<transition matchExpression="Done!" toState="sendCtrlW">
+			</transition>
+			<!-- If the transfer explicitly failed, assume it would repeatedly fail.  So do not resend and
+			go send the next command.
+			-->
+			<transition matchExpression="FAILED: szr" toState="sendCtrlW">
+			</transition>
+			<transition matchExpression="science is NOT running" toState="sendCtrlW">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state looks for indications of Ctrl-W success or failure.
+	-->
+	<state name="sendCtrlW">
+		<transitions>
+			<!-- If a surface dialog is seen after sending the Ctrl-W but before an indication of its success, assume
+			the command was missed by the glider.  Resend it and wait for success or failure.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="waitForDevicesListStart">
+				<action type="glider" command="Ctrl-W">
+				</action>
+			</transition>
+			<!-- If no indication of success or failure is seen within 10 minutes, assume the glider dove.  Go
+			to the script's first state in preparation for the next surfacing.
+			-->
+			<transition timeout="10" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state waits to see the devices list print out and then submits a Ctrl-R to resume.
+	-->
+	<state name="waitForDevicesListStart">
+		<transitions>
+			<!-- If devices list is seen, assume the glider is ready to receive a command and send
+			the Ctrl-R.
+			-->
+			<transition matchExpression="name in ALLCAPS means CRITICAL device" toState="waitForDevicesListEnd">
+			</transition>
+			<!-- If no surface dialog is seen for 10 minutes, assume the glider dove and go to the
+			start of the script in preparation for the next surfacing.
+			-->
+			<transition timeout="10" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state waits to see the devices list print out and then submits a Ctrl-R to resume.
+	-->
+	<state name="waitForDevicesListEnd">
+		<transitions>
+			<!-- If devices list is seen, assume the glider is ready to receive a command and send
+			the Ctrl-R.
+			-->
+			<transition matchExpression="devices:" toState="waitForResume">
+				<action type="glider" command="Ctrl-R">
+				</action>
+			</transition>
+			<!-- If no surface dialog is seen for 10 minutes, assume the glider dove and go to the
+			start of the script in preparation for the next surfacing.
+			-->
+			<transition timeout="10" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state send a Ctrl-R to cause the glider to resume its mission.
+	-->
+	<state name="sendResume">
+		<transitions>
+			<!-- If a surface dialog is seen, assume the glider is ready to receive a command and send
+			the Ctrl-R.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="waitForResume">
+				<action type="glider" command="Ctrl-R">
+				</action>
+			</transition>
+			<!-- If no surface dialog is seen for 10 minutes, assume the glider dove and go to the
+			start of the script in preparation for the next surfacing.
+			-->
+			<transition timeout="10" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+
+
+	<!-- This state looks for indications of Ctrl-R success or failure.
+	-->
+	<state name="waitForResume">
+		<transitions>
+			<!-- If the Ctrl-R command failed to verify - i.e., the dockserver did not see an echo of
+			the command within ~20 sec of sending it, then attempt to resend it.
+			-->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendResume">
+			</transition>
+			<!-- Once the Ctrl-R is confirmed, go wait for the glider to disconnect - i.e., Iridium hangup
+			-->
+			<transition matchExpression="RESUMING MISSION" toState="waitForDisconnect">
+			</transition>
+			<!-- If no indication of success or failure is seen within 10 minutes, assume the glider dove.  Go
+			to the script's first state in preparation for the next surfacing.
+			-->
+			<transition timeout="10" toState="sendzModem">
+			</transition>
+			<!-- If a surface dialog is seen after sending the Ctrl-R but before an indication of its success, assume
+			the command was missed by the glider.  Resend it and wait for success or failure.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="waitForResume">
+				<action type="glider" command="Ctrl-R">
+				</action>
+			</transition>
+		</transitions>
+	</state>
+
+
+
+	<!-- This state waits for the glider to disconnect and then goes to the script's first state in preparation for the
+	glider's next surfacing.  The text "Connection Event: Carrier Detect lost." is always the last text seen when a
+	glider disconnects.  Since this state matches that text before going to the script's first state, the glider's console
+	output as seen by the script is cleared before looping back to the first state.  This helps prevent some spurious
+	glider output to cause a premature zModem transfer - premature in the sense that the glider has not yet dove
+	and later resurfaced.
+	-->
+	<state name="waitForDisconnect">
+		<transitions>
+			<!-- To help keep the script in sync with the glider's dialog, wait until the glider hangs up before
+			looping back to the start of this script.  Helps insure that any spurious glider dialog that is received
+			before the glider hangs up does not cause a premature transition out of this script's start state.
+			-->
+			<transition matchExpression="Connection Event: Carrier Detect lost." toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+
+
+
+	<finalState name="final">
+	</finalState>
+</gliderScript>
+

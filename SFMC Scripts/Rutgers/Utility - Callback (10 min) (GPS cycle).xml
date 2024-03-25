@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	Date			Author							Comments
+	12/11/2012		dkaragon@marine.rutgers.edu		initial
+	-->
+	
+<!--
+	Used during Gliderdos on the surface in drift mode.  For use with dockserver version 1.2 and up.	
+	 -->
+
+<gliderScript>
+	<initialState name="initial">
+		<transitions>
+			<transition matchExpression="sensor:x_last_wpt_lon" toState="verify_GPS_callback">
+				<action type="glider" command="this is a long expression that delays to get whole surface dialog">
+				</action>
+				<action type="glider" command="">
+				</action>
+				<action type="glider" command="put c_gps_on 0">
+				</action>
+			</transition>
+			<transition timeout="2" toState="initial">
+			</transition>
+		</transitions>
+	</initialState>
+
+	
+	<state name="verify_GPS_callback">
+		<transitions>
+			<transition matchExpression="command verify fail" toState="verify_GPS_callback">
+				<action type="glider" command="">
+				</action>
+				<action type="glider" command="put c_gps_on 0">
+				</action>
+			</transition>
+			<transition matchExpression="sensor: c_gps_on = 0" toState="callback_short">
+				<action type="glider" command="">
+				</action>
+				<action type="glider" command="callback 1">
+				</action>
+			</transition>
+			<transition timeout="2" toState="initial">
+			</transition>
+		</transitions>
+	</state>
+	
+	<state name="callback_short">
+		<transitions>
+			<transition matchExpression="sensor:x_last_wpt_lon" toState="verify_noGPS_callback">
+				<action type="glider" command="this is a long expression that delays to get whole surface dialog">
+				</action>
+				<action type="glider" command="">
+				</action>
+				<action type="glider" command="put c_gps_on -1">
+				</action>
+			</transition>
+			<transition timeout="5" toState="initial">
+			</transition>
+		</transitions>
+	</state>
+	
+	<state name="verify_noGPS_callback">
+		<transitions>
+			<transition matchExpression="command verify fail" toState="verify_noGPS_callback">
+				<action type="glider" command="">
+				</action>
+				<action type="glider" command="put c_gps_on -1">
+				</action>
+			</transition>
+			<transition matchExpression="sensor: c_gps_on = -1" toState="initial">
+				<action type="glider" command="">
+				</action>
+				<action type="glider" command="callback 10">
+				</action>
+			</transition>
+			<transition timeout="2" toState="initial">
+			</transition>
+		</transitions>
+	</state>
+
+	<finalState name="final">
+	</finalState>
+</gliderScript>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+Date		Author						Comments
+2012-10-11  rtrout@teledyne.com 		Created.
+-->
+
+<!-- This script directs a glider to call back it's primary number.  It loops until a user stops it.
+-->
+
+<gliderScript>
+	<!-- The start state of the script.  It waits for a surface dialog or gliderDOS prompt and then sends the appropriate callback command.
+	-->
+	<initialState name="sendCallback">
+		<transitions>
+			<!-- If in a mission (ie., a surface dialog is seen), send the "h 0 0" command each time a surface dialog is seen.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="sendCallback">
+				<action type="glider" command="h 0 0">
+				</action>
+			</transition>
+			<!-- If NOT in a mission (ie., a gliderDOS prompt is seen), send the "callback 0 0" command each time a glider DOS prompt is seen.
+			-->
+			<transition matchExpression="(Glider(Dos|LAB) [AIN] (0|(-?[1-9]+))) &gt;" toState="sendCallback">
+				<action type="glider" command="callback 0 0">
+				</action>
+			</transition>
+		</transitions>
+	</initialState>
+
+	<finalState name="final">
+	</finalState>
+</gliderScript>
+

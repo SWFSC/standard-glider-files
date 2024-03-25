@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+Date			Author					Comments
+2016-05-12 mark.worden@teledyne.com     New SFMC Dock Server script to tell the glider to resume its mission 
+										upon surface
+-->
+
+<!--
+Purpose: Used during a mission to quickly resume the mission. Since a freewave or iridium connection is 
+assumed, this script should not be used when using to control direct connected gliders.
+
+Dependency: Assumes a freewave or iridium connection to the glider.
+
+For use with SFMC dockserver version 8.x and up.
+
+Note: This script has transitions based on loss of Carrier Detect.  It may not behave correctly with
+communications that do NOT support Carrier Detect.
+-->
+
+<gliderScript>
+	<!-- The start state of the script.  It attempts to send an initial route.
+	-->
+	<initialState name="sendResume">
+		<transitions>
+			<!-- If a surface dialog is seen, assume the glider is ready to receive a command and send
+			the Ctrl-R.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="waitForResume">
+				<action type="glider" command="Ctrl-R">
+				</action>
+			</transition>
+		</transitions>
+	</initialState>
+
+
+	<!-- This state checks the handling of the Ctrl-R, and takes appropriate action based of further dialog received.
+	-->
+	<state name="waitForResume">
+		<transitions>
+			<!-- If the Ctrl-R command failed to verify - i.e., the dockserver did not see an echo of
+			the command within ~20 sec of sending it, then attempt to resend it.
+			-->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendResume">
+			</transition>
+			<!-- Once the Ctrl-R is confirmed, go wait for the glider to disconnect - i.e., Iridium hangup
+			-->
+			<transition matchExpression="RESUMING MISSION" toState="waitForDisconnect">
+			</transition>
+			<!-- If no indication of success or failure is seen within 10 minutes, assume the glider dove.  Go
+			to the script's first state in preparation for the next surfacing.
+			-->
+			<transition timeout="10" toState="sendResume">
+			</transition>
+			<!-- If a surface dialog is seen after sending the Ctrl-R but before an indication of its success, assume
+			the command was missed by the glider.  Resend it and wait for success or failure.
+			-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="waitForResume">
+				<action type="glider" command="Ctrl-R">
+				</action>
+			</transition>
+		</transitions>
+	</state>
+
+	<!-- This state waits for the glider to disconnect and then goes to the script's first state in preparation for the
+	glider's next surfacing.  The text "Connection Event: Carrier Detect lost." is always the last text seen when a
+	glider disconnects.  Since this state matches that text before going to the script's first state, the glider's console
+	output as seen by the script is cleared before looping back to the first state.  This helps prevent some spurious
+	glider output to cause a premature zModem transfer - premature in the sense that the glider has not yet dove
+	and later resurfaced.
+	-->
+	<state name="waitForDisconnect">
+		<transitions>
+			<!-- To help keep the script in sync with the glider's dialog, wait until the glider hangs up before
+			looping back to the start of this script.  Helps insure that any spurious glider dialog that is received
+			before the glider hangs up does not cause a premature transition out of this script's start state.
+			-->
+			<transition matchExpression="Connection Event: Carrier Detect lost." toState="sendResume">
+			</transition>
+		</transitions>
+	</state>
+
+
+
+	<finalState name="final">
+	</finalState>
+</gliderScript>
+

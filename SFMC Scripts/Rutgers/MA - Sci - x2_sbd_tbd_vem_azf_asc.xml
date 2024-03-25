@@ -1,0 +1,273 @@
+<gliderScript>
+
+
+<!--
+	2015/03/13	dkaragon@marine		initial: built script off our old SBDTBD MA script to be much faster and more efficient
+									goal was to shorten surface time.  This coupled with some GPS/SBD changes to limit surface time
+									also added archve option on dockzr
+									There are some aggressive settings in here, notably if file transfer fails the first time it may not try again
+									
+	2015/06/26	dkaragon@marine		eliminated the callback 5 option for a glider in gliderdos.  Would rather a glider run mission than drift.
+	
+	2015/07/06	dkaragon@marine		!k was still being sent as a test for if at prompt, this had an unintended effect of keeping the surface 	drift tickle alive; added a GPS Location state for wait for transfer, if it hangs up and calls back in it just dives
+	2015/07/15	dkaragon@marine		disabled a verify zma state that caused ru28 to go back to dockzr state premature
+									changed wait for transfer, waitForTransfer, to GLD:success, it was catching SCI:success which is premature
+	2015/08/15	dkaragon@marine		ru29 had a surfacing where dockzr went through to glider but the 'not found' trigger in wait for zrma didn't trigger.  I added a short timeout to that state since other actions were noted not to work.  2 min timeout should reset the glider before it dives, not ideal.  Also shortened most of the 10 min timers to 5 for this reason.
+	
+	2015/09/15	dkaragon@marine		ru28 surfacing had double control f, it gave one after done, but it didn't go through until next round of dialog came by, causing it to send another from the Control-R trigger in waitforreloadma.  I stopped the control F after done, so that wait for reload is stuck in a loop and will issue control F until it registers it
+									modified sendzmodem to have trigger if it detects files are being sent.  this is a result of a strange occurrence that a s tbd sbd went through but was not seen immediately, it caused a surface dialog to go before command, this caused the state to go back to sendzmodem while the glider was transferring.  Added check to sendzmodem if we are transferring to move to wait for transfer
+	2016/7/20	dkaragon@marine		no more fast development, calling it fast script now	
+	2019/10/21	dkaragon@marine		added section after MA transfer to do a sci file transfer.  It moves cfg dat ini files currently.  If it sees a xxx verify fail it moves onward.  if script works, TBD transfer is important, might want it to not go onward and retry.
+									Also it triggers on sensor: which is pretty broad (not ideal), BUT most surfacings do not have an MA file.  I don't want this to add time to surfacings so triggering on sensor allows it to take place at same time as dockzr *.ma.  If it triggers on GPS it may not register in time for the control R sendzmodem looks for
+	2020/08/6	dkaragon@marine		sci file transfer wait for was triggering on Done! which didn't happen, seems succeeded:szr is the one at least on ru34
+									added a science error section for verify zmodem.  cycles science and moves on, no idea if it works
+-->
+
+	
+<!--Changed to GPS Location trigger instead of surface menu because the glider would call in and do nothing initially.
+	This was to make use of some dead time. -->
+	<initialState  name="sendzrma">
+		<transitions>
+			<transition matchExpression="GPS Location:" toState="verifyzrma">
+				<action type="glider" command="!dockzr -archive yo*.ma goto_l*.ma sample*.ma surfac*.ma">
+				</action>
+			</transition>
+		</transitions>
+	</initialState>
+	
+	<state name="verifyzrma">
+		<transitions>
+			<!-- If command fails, go back and retry -->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendzrma">
+			</transition>
+			<!-- Go wait for transfer to complete -->
+			<transition matchExpression="Starting zModem transfer" toState="waitForzrma">
+			</transition>
+			<!-- Nothing to send, move on to file transfer; send a carriage return to check if we are in gliderdos -->
+			<transition matchExpression="not found" toState="dockszr_sci_file">
+			</transition>
+			<!-- Connection dropped, go back and retry -->
+			<transition matchExpression="Connection Event: Carrier Detect lost." toState="sendzrma">
+			</transition>
+			<!-- This one is tricky: Hit Control R trigger was tripping immediately.  Changed to GPS so that this means it will wait 1 'cycle' before jumping back into the state that triggered it.  ie: sendzrma
+			UPDATE 7/15/2015 - this caused ru28 to go back to sending MA after it had already sent it, ie: zr command went through AFTER GPS came across, thus this put it back to dockzr state with no file to send
+			<transition matchExpression="GPS Location:" toState="sendzrma">
+			</transition>
+			-->
+			<transition timeout="2" toState="sendzrma">
+			</transition>
+		</transitions>
+	</state>
+	
+	<state name="waitForzrma">
+		<transitions>
+			<!-- Something wrong if seeing surface dialogs, start over -->
+			<transition matchExpression="Hit Control-R to RESUME" toState="sendzrma">
+			</transition>
+			<!-- Successfull transfer!  No reason to wait, re-read MA files! -->
+			<transition matchExpression="Done!" toState="waitForReloadma">
+			</transition>
+			<!-- Move to file transfer if failure -->
+			<transition matchExpression="FAILED: zr" toState="dockszr_sci_file">
+			</transition>
+			<transition timeout="5" toState="sendzrma">
+			</transition>
+		</transitions>
+	</state>
+
+	<state name="waitForReloadma">
+		<transitions>
+			<!-- Command failed, go back to this state, and if glider seems to still be in surface dialog loop, re-issue command -->
+			<transition matchExpression="xxx command verify fail xxx" toState="waitForReloadma">
+			</transition>
+			<!-- Success -->
+			<transition matchExpression="MAFILES will be re-read" toState="dockszr_sci_file">
+			</transition>
+			<!-- As soon as dialog is seen again (after Done!) initiate the ctrl F -->
+			<transition matchExpression="Hit Control-F to" toState="waitForReloadma">
+				<action type="glider" command="Ctrl-F">
+				</action>
+			</transition>
+			<transition timeout="5" toState="sendzrma">
+			</transition>
+		</transitions>
+	</state>
+	
+	
+	<!-- TBD OR SCI FILE TRANSFER ========================================= -->
+	<state name="dockszr_sci_file">
+		<transitions>
+			<transition matchExpression="sensor:" toState="verify_dockszr">
+				<action type="glider" command="!dockszr -archive *.dat *.ini *.cfg">
+				</action>
+			</transition>
+			<transition timeout="2" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+	
+	<state name="verify_dockszr">
+		<transitions>
+			<!-- If command fails, just go onward, just in case -->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendzModem">
+			</transition>
+			<!-- Go wait for transfer to complete -->
+			<transition matchExpression="Starting zModem transfer" toState="waitfor_dockszr">
+			</transition>
+			<!-- Nothing to send, move on to file transfer; send a carriage return to check if we are in gliderdos -->
+			<transition matchExpression="not found" toState="sendzModem">
+			</transition>
+			<!-- Science is not running -->
+			<transition matchExpression="science is NOT running" toState="sendzModem">
+			</transition>
+			<!-- Connection dropped, go back -->
+			<transition matchExpression="Connection Event: Carrier Detect lost." toState="dockszr_sci_file">
+			</transition>
+			<transition timeout="2" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+	
+	<state name="waitfor_dockszr">
+		<transitions>
+			<!-- Something wrong if seeing surface dialogs, start over -->
+			<transition matchExpression="Hit Control-R to RESUME" toState="dockszr_sci_file">
+			</transition>
+			<!-- Successfull transfer! -->
+			<transition matchExpression="succeeded:szr" toState="sendzModem">
+			</transition>
+			<!-- Move to file transfer if failure -->
+			<transition matchExpression="FAILED: zr" toState="sendzModem">
+			</transition>
+			<!-- Connection dropped, bail out, not holding a connection -->
+			<transition matchExpression="Connection Event: Carrier Detect lost." toState="sendzModem">
+			</transition>
+			<transition timeout="4" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+	<!-- TBD OR SCI FILE TRANSFER ========================================= -->
+
+	
+	<!-- SEND DATA FILES ========================================= -->
+	<state name="sendzModem">
+		<transitions>
+			<!-- If we are at a gliderdos prompt issue a callback and go back to beginning of script -->
+			<!-- I don't like this option anymore, infinitely drifts a glider that aborts
+			<transition matchExpression="(Glider(Dos|LAB) [AIN] (0|(-?[1-9]+))) &gt;" toState="sendzrma">
+				<action type="glider" command="callback 5">
+				</action>
+			</transition>
+			-->
+			<!-- This is here because I witnessed the s sbd tbd command not go through, another surface dialog came by which caused verifyzmodem to go back to sendzmodem, transfer finished.  Another dialog came by and s tbd sbd went through again.  If this is here and it sees we are already sending it will go to wait for transfer -->
+			<transition matchExpression="Enumerating and selecting" toState="waitForTransfer">
+			</transition>
+			<!-- Send the command, it is ready -->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzModem">
+				<action type="glider" command="s -num=2 *.sbd *.tbd *.vem *.azf *.asc">
+				</action>
+			</transition>
+			<transition timeout="5" toState="sendzrma">
+			</transition>
+		</transitions>
+	</state>
+
+	<state name="verifyzModem">
+		<transitions>
+			<!-- Science error, cycle it and move on? -->
+			<transition matchExpression="SCI ERROR:" toState="sendResume">
+				<action type="glider" command="!put c_science_on 0">
+				</action>
+				<action type="glider" command="!put c_science_on 1">
+				</action>
+			</transition>
+			<!-- Something wrong, go back and try again -->
+			<transition matchExpression="Hit Control-R to RESUME" toState="sendzModem">
+			</transition>
+			<!-- Command failed, retry -->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendzModem">
+			</transition>
+			<!-- Command success, go wait for transfer to finish -->
+			<transition matchExpression="Enumerating and selecting" toState="waitForTransfer">
+			</transition>
+			<!-- Glider hung up, try again -->
+			<transition matchExpression="Connection Event: Carrier Detect lost." toState="sendzModem">
+			</transition>
+			<transition timeout="5" toState="sendzrma">
+			</transition>
+		</transitions>
+	</state>
+
+	<state name="waitForTransfer">
+		<transitions>
+			<!-- If we are here, we already attempted to transfer once and failed, we should try next surfacing -->
+			<transition matchExpression="Hit Control-R to RESUME" toState="sendResume">
+			</transition>
+			<!-- File transfer success, report and dive -->
+			<transition matchExpression="GLD: SUCCESS" toState="sendResume">
+			</transition>
+			<!-- No files to send, this shouldn't happen, but go dive -->
+			<transition matchExpression="NO TRANSMISSION" toState="sendResume">
+			</transition>
+			<!-- Something wrong, dive for safety -->
+			<transition matchExpression="Error sending files" toState="sendResume">
+			</transition>
+			<!-- Something wrong, dive for safety -->
+			<transition matchExpression="GPS Location:" toState="sendResume">
+			</transition>
+			<!-- IMPORTANT - If this times out, we took xx min to transfer, go dive if this happens -->
+			<transition timeout="80" toState="sendResume">
+			</transition>
+		</transitions>
+	</state>
+	<!-- SEND DATA FILES ========================================= -->
+
+
+	<!-- SEND RESUME/DIVE ========================================= -->
+	<state name="sendResume">
+		<transitions>
+			<transition matchExpression="xxx command verify fail xxx" toState="sendResume">
+			</transition>
+			<!-- Ready to dive, but send report first! -->
+			<transition matchExpression="Hit Control-R to RESUME" toState="waitForResume">
+				<action type="glider" command="Ctrl-W">
+				</action>
+				<action type="glider" command="Ctrl-R">
+				</action>
+			</transition>
+			<transition timeout="10" toState="sendzrma">
+			</transition>
+		</transitions>
+	</state>
+
+	<state name="waitForResume">
+		<transitions>
+			<transition matchExpression="xxx command verify fail xxx" toState="sendResume">
+			</transition>
+			<!-- Sucess -->
+			<transition matchExpression="RESUMING MISSION" toState="waitForDisconnect">
+			</transition>
+			<!-- Something wrong, just dive -->
+			<transition matchExpression="Hit Control-R to RESUME" toState="waitForResume">
+				<action type="glider" command="Ctrl-R">
+				</action>
+			</transition>
+			<transition timeout="10" toState="sendzrma">
+			</transition>
+		</transitions>
+	</state>
+
+	<state name="waitForDisconnect">
+		<transitions>
+			<!-- Make sure glider actually hangs up -->
+			<transition matchExpression="Connection Event: Carrier Detect lost." toState="sendzrma">
+			</transition>
+			<transition timeout="10" toState="sendzrma">
+			</transition>
+		</transitions>
+	</state>
+	<!-- SEND RESUME/DIVE ========================================= -->
+	
+	<finalState name="final">
+	</finalState>
+</gliderScript>

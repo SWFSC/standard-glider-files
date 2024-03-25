@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	Date			Author					Comments
+	Feb-22-2006 	cjones@webbresearch.com		      Created.
+	-->
+	
+<!--
+	Used during Gliderdos on the surface in drift mode.  For use with dockserver version 1.2 and up.	
+	 -->
+
+<gliderScript>
+	<initialState name="Wait for Iridium Callback">
+		<transitions>
+			<transition matchExpression="GPS Location" toState="Wait for Iridium Callback">
+				<action type="glider" command="irid callback script delay extra long version test test test test test">
+				</action>
+				<action type="glider" command="">
+				</action>
+				<action type="glider" command="callback 5">
+				</action>
+			</transition>
+		</transitions>
+	</initialState>
+	<finalState name="final">
+	</finalState>
+</gliderScript>
