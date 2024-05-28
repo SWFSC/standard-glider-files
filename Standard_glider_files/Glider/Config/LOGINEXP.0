@@ -1,0 +1,2 @@
+### wait for DISA header
+expect 60 "Open"
