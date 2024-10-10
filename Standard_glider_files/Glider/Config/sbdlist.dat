@@ -2,6 +2,11 @@
 # Thu May 31 21:58:20 2018
 # 2022-11-15 ACossio stock sbdlist.dat
 
+# --------------------------------------------------------------------
+# SENSOR NAME           INTERVAL  STATE     HALFYOS   YO_DUTY_CYCLE
+# (Defaults)            0         15        -1        -1
+# --------------------------------------------------------------------
+
                       c_alt_time   900     7     1
             c_climb_target_depth   600     7     2
                     c_de_oil_vol   60    15     -1

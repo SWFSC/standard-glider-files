@@ -37,7 +37,7 @@ behavior_name=sample
     b_arg: min_depth(m)                      -5  # minimum depth to collect data, default
                                                  # is negative to leave on at surface in
                                                  # spite of noise in depth reading
-    b_arg: max_depth(m)                    2000  # maximum depth to collect data
+    b_arg: max_depth(m)                    300  # maximum depth to collect data
 
 #    b_arg: sample_time_after_state_change(s)  20  # added per B. Allsup to prevent resets
 	
