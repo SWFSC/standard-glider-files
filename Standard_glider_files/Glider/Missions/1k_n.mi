@@ -9,6 +9,7 @@
 # 2019-11-08 jwalsh added max lag before syncing time per Teledyne instructions until GPS firmware update can be installed
 # 2022-Nov-15 ACossio stock 1k_n.mi file
 # 2023-05-17 acossio added arguments for dealing with dense surface krill
+# 2025-02-21 acossio added dmon, wispr, bsipar
 
 sensor: c_science_all_on_enabled(bool)          	0   # 0 control science individually 
 sensor: c_science_send_all(bool)		      		0   # just send standard subset but still log them all on science.
@@ -45,7 +46,7 @@ behavior: abend
     b_arg: stalled_for_sample_time(sec)     65.0
 
     # HARDWARE: vacuum, battery
-    b_arg: undervolts(volts)                12.0 # 
+    b_arg: undervolts(volts)                12.5 # 12.5 for rechargable Li 12 for non rechargable Li
     b_arg: undervolts_sample_time(sec)      60.0
     b_arg: vacuum_max(inHg)                 12.0
     b_arg: vacuum_sample_time(sec)          60.0
@@ -92,14 +93,22 @@ behavior: yo
 # SAMPLE : CTD -set to sample
 behavior: sample
     b_arg: args_from_file(enum)     01  # c_profile_on sample01.ma
+	
+	# SAMPLE : FLBBCD -set to sample 
+behavior: sample
+	b_arg: args_from_file(enum)		48  # c_flbbcd_on
+	
+		# SAMPLE : DMON -set to sample 
+#behavior: sample
+#	b_arg: args_from_file(enum)		49  # c_dmon_on
 
 # SAMPLE : OPTODE 4330 -set to sample
 behavior: sample
     b_arg: args_from_file(enum)     54  # c_oxy4_on
-
-# SAMPLE : FLBBCD -set to sample 
-# behavior: sample
-#	b_arg: args_from_file(enum)		48  # c_flbbcd_on
+	
+	# SAMPLE : BSIPAR -set to sample
+#behavior: sample
+#   b_arg: args_from_file(enum)     56  # c_bsipar_on
 
 # SAMPLE : Nortek -set to sample
 # behavior: sample
@@ -116,6 +125,10 @@ behavior: sample
 # SAMPLE : Williamson camera -set to sample
 # behavior: sample
 #	b_arg: args_from_file(enum)		87	# c_solocam_on On STM glider ver 10+
+
+# SAMPLE : WISPR -set to sample
+# behavior: sample
+#	b_arg: args_from_file(enum)		93	# c_wispr_on
 
 
 # PREPARE TO DIVE : wait 2 min for GPS
