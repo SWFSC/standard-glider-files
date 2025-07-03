@@ -2,6 +2,7 @@ behavior_name=sample
 # sample all science sensors on dive/hover/climb
 # 2013-Apr-24 lacooney@alum.mit.edu Modified from sample10.ma
 # 2022-Nov-15 ACossio stock Solocam for ver 8.6 gliders
+# 2025-Jul-03 jwalsh changed state_to_sample to 15
 
 <start:b_arg>
    b_arg: sensor_type(enum)                 85  # 85  C_SOLOCAM_ON on ver 8.6
@@ -9,7 +10,7 @@ behavior_name=sample
 
                                                 # This is a bit-field, combine:
                                                 # 8 on_surface, 4 climbing, 2 hovering, 1 diving
-    b_arg: state_to_sample(enum)            7   # 0  none
+    b_arg: state_to_sample(enum)            15   # 0  none
                                                 # 7  diving|hovering|climbing
                                                 # 15 diving|hovering|climbing|on_surface
 
