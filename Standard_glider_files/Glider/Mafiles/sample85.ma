@@ -4,6 +4,7 @@ behavior_name=sample
 # 2022-Nov-15 ACossio stock Solocam for ver 8.6 gliders
 # 2025-Jul-03 jwalsh changed state_to_sample to 15
 # 2025-Jul-07 jwalsh changed max_depth to 200 m
+# 2025-Jul-07 jwalsh added tod_start and tod_stop values
 
 <start:b_arg>
    b_arg: sensor_type(enum)                 85  # 85  C_SOLOCAM_ON on ver 8.6
@@ -43,10 +44,10 @@ behavior_name=sample
 
 #    b_arg: sample_time_after_state_change(s)  20  # added per B. Allsup to prevent resets
 	
-#	b_arg: tod_start(hhmm)				   -1	# Time Of Day start hhmm
+	b_arg: tod_start(hhmm)				   0700	# Time Of Day start hhmm
 												#	-1 disabled
 												#   hh(00-23) mm(00-59
-#	b_arg: tod_stop(hhmm)				   -1	# Time Of Day stop hhmm
+	b_arg: tod_stop(hhmm)				   1900	# Time Of Day stop hhmm
 												#   hh(00-23) mm(00-59
 
 <end:b_arg>
