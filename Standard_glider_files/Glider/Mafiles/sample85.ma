@@ -3,6 +3,7 @@ behavior_name=sample
 # 2013-Apr-24 lacooney@alum.mit.edu Modified from sample10.ma
 # 2022-Nov-15 ACossio stock Solocam for ver 8.6 gliders
 # 2025-Jul-03 jwalsh changed state_to_sample to 15
+# 2025-Jul-07 jwalsh changed max_depth to 200 m
 
 <start:b_arg>
    b_arg: sensor_type(enum)                 85  # 85  C_SOLOCAM_ON on ver 8.6
@@ -38,7 +39,7 @@ behavior_name=sample
     b_arg: min_depth(m)                      -5  # minimum depth to collect data, default
                                                  # is negative to leave on at surface in
                                                  # spite of noise in depth reading
-    b_arg: max_depth(m)                    300  # maximum depth to collect data
+    b_arg: max_depth(m)                    200  # maximum depth to collect data
 
 #    b_arg: sample_time_after_state_change(s)  20  # added per B. Allsup to prevent resets
 	
