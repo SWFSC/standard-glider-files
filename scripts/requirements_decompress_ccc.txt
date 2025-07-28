@@ -1,0 +1,2 @@
+dbdreader
+scipy
