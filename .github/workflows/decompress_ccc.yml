@@ -21,7 +21,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install Python dependencies
-        run: pip install -r requirements_decompress_ccc.txt
+        run: pip install -r scripts/requirements_decompress_ccc.txt
 
       - name: Run decompression script
         run: python scripts/decompress_ccc.py
