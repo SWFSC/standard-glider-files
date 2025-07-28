@@ -6,6 +6,7 @@ on:
       - main 
     paths:
       - Cache
+  workflow_dispatch:
 
 jobs:
   decompress-ccc:
@@ -25,8 +26,16 @@ jobs:
       - name: Run decompression script
         run: python scripts/decompress_ccc.py
 
-      - name: Commit generated .cac files
-        uses: stefanzweifel/git-auto-commit-action@v5 # This action automatically commits changes
-        with:
-          commit_message: "chore: Auto-generated .cac files from .ccc"
-          file_pattern: 'Cache/**/*.cac'
+      - name: Stage, commit, and push specific file types
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add 'Cache/*.cac'
+          git commit -m "chore: Auto-generated .cac files from .ccc" || echo "No changes to commit"
+          git push
+
+    #   - name: Commit generated .cac files
+    #     uses: stefanzweifel/git-auto-commit-action@v5 # This action automatically commits changes
+    #     with:
+    #       commit_message: "chore: Auto-generated .cac files from .ccc"
+    #       file_pattern: 'Cache/**/*.cac'
