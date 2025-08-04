@@ -6,7 +6,7 @@ A repository for standard files that are put on all US AMLR Slocum gliders befor
 
 Note that this repo has a [gh action](.github/workflows/decompress_ccc.yml) that automatically decompresses new compressed cache (i.e., *.ccc) files, and commits decompressed (i.e., *.cac) file to the repo.
 
-View the [wiki](https://github.com/us-amlr/Standard-glider-files/wiki) for full documentation and examples. 
+View the [wiki](https://github.com/us-amlr/Standard-glider-files/wiki) for full documentation and examples, or the [ESD glider lab manual](https://swfsc.github.io/glider-lab-manual/) for broader ESD glider lab context.
 
 ## Disclaimer
 
