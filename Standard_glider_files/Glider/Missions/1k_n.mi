@@ -10,6 +10,7 @@
 # 2022-Nov-15 ACossio stock 1k_n.mi file
 # 2023-05-17 acossio added arguments for dealing with dense surface krill
 # 2025-02-21 acossio added dmon, wispr, bsipar
+# 2025-08-08 jwalsh added arguments to prevent digifin oddities and warnings
 
 sensor: c_science_all_on_enabled(bool)          	0   # 0 control science individually 
 sensor: c_science_send_all(bool)		      		0   # just send standard subset but still log them all on science.
@@ -20,6 +21,9 @@ sensor: u_use_current_correction(nodim)  1  #  0 calculate, but do not use m_wat
 sensor:	u_alt_min_depth(m)	35.0	# how deep glider must be to use the altimeter
 sensor: u_abort_max_burn_time(sec) 		43200 # 12 hours Always drop the weight after this time
 sensor: u_use_file_compression(bool) 1  # 0 disables compression, 1 enables compression  #Only for STM gliders
+sensor: u_digifin_hide_oddities_at_surface(bool)	1	# prevents oddities from reporting
+sensor: u_digifin_mask_movement_warning_at_surface(bool)	1	# does not create movement warning at surface
+sensor: u_digifin_leakdetect_count(int)	10	# need this many consecutive readings to abort
 
 # For dealing with dense surface krill per David Aragon
 sensor: u_max_water_depth_lifetime(yos) 0  # 
