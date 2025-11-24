@@ -2,7 +2,7 @@ behavior_name=yo
 # 2022-Nov-15 ACossio stock yo20.ma used in 1k_n.mi
 <start:b_arg>
     # How many half-yos to perform
-    b_arg:  num_half_cycles_to_do(nodim)    4      # Number of dive/climbs to perform 
+    b_arg:  num_half_cycles_to_do(nodim)     2    # Number of dive/climbs to perform 
 
 
     # DIVE_TO ARGUMENTS
