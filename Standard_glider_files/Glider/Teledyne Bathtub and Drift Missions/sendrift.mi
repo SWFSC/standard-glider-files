@@ -1,0 +1,156 @@
+# drift at depth mission
+#
+#  Retrieves waypoints from mafiles/goto_l10.ma 
+#  Retrieves drift envelope from mafiles/drift20.ma	
+#  Retrieves climb to surface controls from mafiles/surfac21 through 26.ma 
+#  All surfac behaviors use c_use_bpump 0 to enable Autoballast
+#  Surfaces:
+#     If haven't had comms as controlled by - surfac21.ma
+#     Mission done (finished all the waypoints) - surfac22.ma
+#     Half yo's finish or bad altimeter - surfac23.ma
+#     Every waypoint - surfac24.ma
+#     If requested by science - surfac25.ma
+#     Every x minutes - surfac26.ma
+# All science sensors sample on only downcast from sample10.ma
+#
+# Manually set c_dive_bpump to a smaller number, ex. 'put c_dive_bpump -270' if there is concern that the glider may hit the
+#  bottom with full drive, or adjust the altitude in yo14.ma
+#
+################################################################################
+
+sensor: c_science_all_on_enabled(bool)   1  # in, 1 (non-zero) enables c_science_all_on
+					    # disable (set to 0) this sensor to allow for individually 
+					    # sampled science sensors ie sample11.ma and greater
+
+sensor: u_use_ctd_depth_for_flying(bool) 0  # if true => use ctd measurement for m_depth
+                                            # implemented as emergency workaround for
+                                            # broken ocean pressure transducer 
+
+sensor: u_use_current_correction(nodim)  2  #  0 calculate, but do not use m_water_vx/y
+                                            #  1 use m_water_vx/y to navigate AND steer
+                                            #  2 use updated current correction algorithm
+
+################################################################################
+
+behavior: abend
+    b_arg: overdepth_sample_time(s)       20.0 # how often to check
+
+                                               # MS_ABORT_OVERTIME
+    b_arg: overtime(s)                    -1.0 # < 0 disables
+
+                                               # MS_ABORT_WPT_TOOFAR
+    b_arg: max_wpt_distance(m)            -1   # Maximum allowable distance to a waypoint           
+
+                                               # MS_ABORT_UNDERVOLTS
+    b_arg: undervolts(volts)              12.5 # < 0 disables 
+                                               # 12 for 4s Lithium Primary Batteries  
+                                               # 12.5 for Lithium Rechargeable Batteries
+                                               # 10 for Alkaline Batteries
+
+                                               # MS_ABORT_SAMEDEPTH	
+    b_arg: samedepth_for(sec)		45000.0 # Set large to avoid triggering for good depth keeping
+                                               # but still engaged if glider is either stuck at surface/bottom
+                                               # 45000 = 12 hours;											   
+    b_arg: samedepth_for_sample_time(s)   30.0 # how often to check
+
+                                               # MS_ABORT_STALLED
+    b_arg: stalled_for(sec)		45000.0 # Is the glider stalled in the horizontal direction..
+                                               # Set large to avoid triggering for good depth keeping with no thruster
+                                               # but still engaged if glider is stuck while trying to dive or climb
+                                               # 45000 = 12 hours; <0 disables
+
+    b_arg: no_cop_tickle_for(sec)      50400.0 # secs, abort mission if watchdog
+                                               # not tickled this often, <0 disables
+						# 48600 = 13.5 hours; 50400 = 14 hours;
+    b_arg: no_cop_tickle_percent(%)         -1 # 0-100, <0 disables
+   
+################################################################################
+# surface_2
+############
+    # Come up if haven't had comms for a while
+ behavior: surface
+    b_arg: args_from_file(enum) 31 # read from mafiles/surfac31.ma
+
+################################################################################
+# surface_3
+############
+    # Come up when mission done
+    # This is determined by no one steering in x-y plane (no waypoints)
+ behavior: surface
+    b_arg: args_from_file(enum) 22 # read from mafiles/surfac22.ma
+  
+################################################################################
+# surface_4
+############
+    # Come up if "yo" finishes, we have completed  num_half_cycles_to_do  
+	# this is specified in the yo behavior (yo14.ma)
+    # This can also become active if a bad altimeter hit causes a dive and climb to
+    	# complete in same cycle. 
+ behavior: surface
+    b_arg: args_from_file(enum) 33 # read from mafiles/surfac33.ma
+
+################################################################################
+# surface_5
+############
+    # Come up every way point
+ behavior: surface
+    b_arg: args_from_file(enum) 34 # read from mafiles/surfac34.ma
+
+################################################################################
+# surface_6
+############
+    # Come up when requested by science
+ behavior: surface
+    b_arg: args_from_file(enum) 25 # read from mafiles/surfac25.ma
+
+################################################################################
+# surface_7
+############
+    # Come up every x minutes
+ behavior: surface
+    b_arg: args_from_file(enum) 36 # read from mafiles/surfac36.ma
+
+################################################################################
+# goto_8
+############
+#### Start Navigation Section ####
+## can only choose one 
+#
+	behavior: goto_list
+    		b_arg: args_from_file(enum) 10   # read from mafiles/goto_l10.ma
+    		b_arg: start_when(enum)      0   # 0-immediately, 1-stack idle 2-heading idle
+
+#####
+#	behavior: set_heading
+#    		b_arg: args_from_file(enum) 10   # >= 0 enables reading from mafiles/set_he10.ma    
+ 
+
+##
+#### End Navigation Section 
+################################################################################
+# drift_9
+############
+ behavior: drift_at_depth
+    b_arg: args_from_file(enum) 20   # read from mafiles/drift_10.ma
+    b_arg: start_when(enum)      2   #  0-immediately, 1-stack idle 2-depth idle
+    b_arg: end_action(enum)      2   # 0-quit, 2 resume
+
+
+################################################################################
+# sample_10
+############
+
+   # Sample all science sensors only on downcast
+ behavior: sample
+    b_arg: args_from_file(enum) 10  # >= 0 enables reading from mafiles/sample10.ma
+
+################################################################################
+
+
+ behavior: prepare_to_dive
+    b_arg: start_when(enum)		0     # 0-immediately, 1-stack idle 2-depth idle
+    b_arg: wait_time(s)			720   # 12 minutes, how long to wait for gps
+
+################################################################################
+
+ behavior: sensors_in       # Turn most input sensors off
