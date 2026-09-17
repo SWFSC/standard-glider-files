@@ -10,7 +10,7 @@ behavior_name=sample
                                                 # This is a bit-field, combine:
                                                 # 8 on_surface, 4 climbing, 2 hovering, 1 diving
     b_arg: state_to_sample(enum)            7   # 0  none 
-												# 7  diving|hovering|climbing
+						# 7  diving|hovering|climbing
                                                 # 15 diving|hovering|climbing|on_surface
 
 

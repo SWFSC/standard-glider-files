@@ -19,7 +19,7 @@ behavior_name=yo
    ## Pump arguments
     b_arg: d_use_bpump(enum)    0 # 0  Autoballast/Speed control.
 
-    b_arg: d_bpump_value(X)   800 # use_bpump == 0   Total amt of ballast.  Stored as C_AUTOBALLAST_VOLUME
+    b_arg: d_bpump_value(X)   400 # use_bpump == 0   Total amt of ballast.  Stored as C_AUTOBALLAST_VOLUME 
 				  # use_bpump == 2   cc, clips to max legal  >0 goes up
    ## Pitch arguments
     b_arg: d_use_pitch(enum)      3 # 1:battpos  2:setonce  3:servo (auto-pitch)

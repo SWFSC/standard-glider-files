@@ -98,7 +98,7 @@ behavior: abend
 ############
     # Come up every way point
 # behavior: surface
-#    b_arg: args_from_file(enum) 05 # read from mafiles/surfac05.ma
+#    b_arg: args_from_file(enum) 24 # read from mafiles/surfac24.ma
 
 ################################################################################
 # goto_6

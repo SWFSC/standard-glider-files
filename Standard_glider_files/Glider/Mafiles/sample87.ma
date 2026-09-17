@@ -9,7 +9,7 @@ behavior_name=sample
 
                                                 # This is a bit-field, combine:
                                                 # 8 on_surface, 4 climbing, 2 hovering, 1 diving
-    b_arg: state_to_sample(enum)            7   # 0  none
+    b_arg: state_to_sample(enum)            4   # 0  none
                                                 # 7  diving|hovering|climbing
                                                 # 15 diving|hovering|climbing|on_surface
 
@@ -37,7 +37,7 @@ behavior_name=sample
     b_arg: min_depth(m)                      -5  # minimum depth to collect data, default
                                                  # is negative to leave on at surface in
                                                  # spite of noise in depth reading
-    b_arg: max_depth(m)                    300  # maximum depth to collect data
+    b_arg: max_depth(m)                    500  # maximum depth to collect data
 
 #    b_arg: sample_time_after_state_change(s)  20  # added per B. Allsup to prevent resets
 	

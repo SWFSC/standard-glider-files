@@ -48,4 +48,75 @@
 # Any omitted arguments take on default values.
 
 
-SCI_M_PRESENT_TIME
+
+
+# Basic Data
+  sci_m_present_time
+  sci_m_disk_free			
+
+
+# CTD41CP Sea-bird  CTD(SBE-41)
+# proglet = ctd41cp
+# -----------------------------
+  sci_ctd41cp_timestamp		
+  sci_water_cond			
+  sci_water_pressure		
+  sci_water_temp			
+ 
+
+  
+# Anderaa Oxygen Optode
+# proglet : Aanderaa Oxygen Optode 4330F or 4831
+# --------------------------
+ sci_oxy4_oxygen			
+ sci_oxy4_saturation		
+ sci_oxy4_temp				
+ sci_oxy4_calphase			
+    
+  
+# Wetlabs ECO-Puck
+# proglet flbbcd: Wet Labs flbbcd fluorometer
+# -------------------------
+ sci_flbbcd_chlor_units	
+ sci_flbbcd_bb_units		
+ sci_flbbcd_cdom_units		
+ sci_flbbcd_timestamp		
+
+ # AZFP
+# ----
+#  sci_azfp_file_offset		
+#  sci_azfp_run_state		
+#  sci_azfp_pause_signal	
+  
+# Nortek
+# ----
+#sci_ad2cp_run_state 		
+#sci_ad2cp_surface_state		
+#sci_ad2cp_bottom_track_signal 
+#sci_ad2cp_file_state   		
+
+# Shadowgraph
+# ----
+sci_solocam_image_files		
+sci_solocam_free_disk_space	
+
+# Wispr
+# -----
+#sci_wispr_file_size                 # File size in seconds
+#sci_wispr_disk_total                 # Total disk size available on system (in 512 byte blocks)
+#sci_wispr_disk_free                 # Free disk size available on system (in 512 byte blocks)
+#sci_wispr_file_offset                  # byte offset in the *.wpr file
+
+
+# DMON
+#-------
+#sci_dmon_msg_byte_count 
+
+# BSIPAR
+#------
+
+#sci_bsipar_par          # derived from col 1
+#sci_bsipar_sensor_volts    # col 1
+#sci_bsipar_temp             # col 2
+#sci_bsipar_supply_volts     # col 3
+#sci_bsipar_timestamp    # secs since 1970
