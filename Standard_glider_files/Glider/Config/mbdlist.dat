@@ -92,3 +92,7 @@ c_ad2cp_on
 c_azfp_on 
 c_solocam_on 
 c_wispr_on 
+
+#Pump Valve
+c_valve_pos
+m_valve_pos
