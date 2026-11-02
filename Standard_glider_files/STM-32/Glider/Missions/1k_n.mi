@@ -2,13 +2,13 @@
 #
 #  Retrieves waypoints from mafiles/goto_l10.ma
 #  Retrieves yo envelope from mafiles/yo20.ma
-#  Retrieves climb to surface controls from mafiles/surfac21 through 26.ma
+#  Retrieves climb to surface controls from mafiles/surfac02 through 05.ma
 #  All surfac behaviors use c_use_bpump 0 to enable Autoballast
 #  Surfaces:
 #     Half yo's finish (put not commanded)- surfac02.ma
-#     If haven't had comms in 8 hours as controlled by - surfac03.ma !!!!
-#     If haven't had comms in 12 hours as controlled by - surfac04.ma !!!!
-#     Every waypoint - surfac05.ma!!!! 
+#     If haven't had comms in 8 hours as controlled by - surfac03.ma 
+#     If haven't had comms in 12 hours as controlled by - surfac04.ma 
+#     Every waypoint - surfac05.ma
 # All science sensors sample on only downcast from sampleXX.ma
 #
 # Manually set c_dive_bpump to a smaller number, ex. 'put c_dive_bpump -270' if there is concern that the glider may hit the
@@ -95,7 +95,7 @@ behavior: abend
 ############
     # Come up every way point
 # behavior: surface
-#    b_arg: args_from_file(enum) 05 # read from mafiles/surfac05.ma
+#    b_arg: args_from_file(enum)  # read from mafiles/surfac05.ma
 
 ################################################################################
 # goto_6
