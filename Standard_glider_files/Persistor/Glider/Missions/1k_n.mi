@@ -56,9 +56,6 @@ behavior: abend
     b_arg: overdepth(m)                     1005
     b_arg: overdepth_sample_time(sec)       30 # how often to check
 
-  #COP TICKLE: watchdog not tickled for 12 hours
-    b_arg: no_cop_tickle_for(sec)      	    43200.0 # 12 hours. secs, abort mission if watchdog not tickled this often
-
   #SAMEDEPTH / STALLED FOR: 15 min every 60 seconds
     b_arg: samedepth_for(sec)               900.0 #15 minutes
     b_arg: samedepth_for_sample_time(sec)   60.0

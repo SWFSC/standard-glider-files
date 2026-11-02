@@ -1,16 +1,14 @@
-# astock.mi
+# 1k_n.mi (STM-32)
 #
 #  Retrieves waypoints from mafiles/goto_l10.ma
 #  Retrieves yo envelope from mafiles/yo20.ma
 #  Retrieves climb to surface controls from mafiles/surfac21 through 26.ma
 #  All surfac behaviors use c_use_bpump 0 to enable Autoballast
 #  Surfaces:
-#     If haven't had comms as controlled by - surfac21.ma !!!!
-#     Mission done (finished all the waypoints) - surfac22.ma!!!!
-#     Half yo's finish or bad altimeter - surfac23.ma!!!!!
-#     Every waypoint - surfac24.ma!!!!
-#     If requested by science - surfac25.ma!!!!!
-#     Every x minutes - surfac26.ma!!!!!!
+#     Half yo's finish (put not commanded)- surfac02.ma
+#     If haven't had comms in 8 hours as controlled by - surfac03.ma !!!!
+#     If haven't had comms in 12 hours as controlled by - surfac04.ma !!!!
+#     Every waypoint - surfac05.ma!!!! 
 # All science sensors sample on only downcast from sampleXX.ma
 #
 # Manually set c_dive_bpump to a smaller number, ex. 'put c_dive_bpump -270' if there is concern that the glider may hit the
@@ -31,10 +29,12 @@ sensor: u_use_current_correction(nodim)  2  #  0 calculate, but do not use m_wat
 
 sensor: u_use_file_compression(bool)     1  # 0 disables compression, 1 enables compression
 
+#sensor: u_abort_max_burn_time(sec)    43200 # 12 hours Always drop the weight after this time (only comment in if flying in Antarctica)
+
 #ALTIMETER SETTINGS
 sensor:	u_alt_min_depth(m)	      40   # how deep glider must be to use the altimeter
 sensor: u_alt_reduced_usage_mode(bool)  1   # Set to 1 for on (only turn on altimeter when necessary), 0 for off (altimeter always on)
-sensor: u_alt_reqd_good_in_a_row(nodim) 3   # how many in a row we require before accepting reading
+sensor: u_alt_reqd_good_in_a_row(nodim) 1   # how many in a row we require before accepting reading
 sensor: u_alt_filter_enabled(bool)      1   # enable median filter depth for altitude
 
 #DIGIFIN SETTINGS
@@ -50,9 +50,6 @@ behavior: abend
 
     b_arg: overdepth(m)                     1005
     b_arg: overdepth_sample_time(sec)       30 # how often to check
-
-  #COP TICKLE: watchdog not tickled for 12 hours
-    b_arg: no_cop_tickle_for(sec)      	    43200.0 # 12 hours. secs, abort mission if watchdog not tickled this often
 
   #SAMEDEPTH / STALLED FOR: 15 min every 60 seconds
     b_arg: samedepth_for(sec)               900.0 #15 minutes
@@ -98,7 +95,7 @@ behavior: abend
 ############
     # Come up every way point
 # behavior: surface
-#    b_arg: args_from_file(enum) 24 # read from mafiles/surfac24.ma
+#    b_arg: args_from_file(enum) 05 # read from mafiles/surfac05.ma
 
 ################################################################################
 # goto_6
