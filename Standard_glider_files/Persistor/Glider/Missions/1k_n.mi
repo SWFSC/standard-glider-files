@@ -1,16 +1,14 @@
-# astock.mi
+# 1k_n.mi for PERSISTOR (software version 8.6)
 #
 #  Retrieves waypoints from mafiles/goto_l10.ma
 #  Retrieves yo envelope from mafiles/yo20.ma
-#  Retrieves climb to surface controls from mafiles/surfac21 through 26.ma
+#  Retrieves climb to surface controls from mafiles/surfac02 through 05.ma
 #  All surfac behaviors use c_use_bpump 0 to enable Autoballast
 #  Surfaces:
-#     If haven't had comms as controlled by - surfac21.ma !!!!
-#     Mission done (finished all the waypoints) - surfac22.ma!!!!
-#     Half yo's finish or bad altimeter - surfac23.ma!!!!!
-#     Every waypoint - surfac24.ma!!!!
-#     If requested by science - surfac25.ma!!!!!
-#     Every x minutes - surfac26.ma!!!!!!
+#     Half yo's finish (put not commanded)- surfac02.ma
+#     If haven't had comms in 8 hours as controlled by - surfac03.ma !!!!
+#     If haven't had comms in 12 hours as controlled by - surfac04.ma !!!!
+#     Every waypoint - surfac05.ma!!!! 
 # All science sensors sample on only downcast from sampleXX.ma
 #
 # Manually set c_dive_bpump to a smaller number, ex. 'put c_dive_bpump -270' if there is concern that the glider may hit the
@@ -25,21 +23,28 @@ sensor: u_use_ctd_depth_for_flying(bool) 0  # if true => use ctd measurement for
 					    # implemented as emergency workaround for
 					    # broken ocean pressure transducer
 
-sensor: u_use_current_correction(nodim)  2  #  0 calculate, but do not use m_water_vx/y
+sensor: u_use_current_correction(nodim)  1  #  0 calculate, but do not use m_water_vx/y
 					    #  1 use m_water_vx/y to navigate AND steer
-					    #  2 use updated current correction algorithm
+					    #  2 use updated current correction algorithm (not available on persistor)
 
-sensor: u_use_file_compression(bool)     1  # 0 disables compression, 1 enables compression
+#sensor: u_use_file_compression(bool)    1  # 0 disables compression, 1 enables compression (does not apply to persistor)
+
+sensor: u_abort_max_burn_time(sec)    43200 # 12 hours Always drop the weight after this time
+
+
+#TRANSMIT HEADER SETTINGS
+sensor: u_dbd_sensor_list_xmit_control(enum)    	2   # transmit header if THIS glider hasn't sent it before (for persistor only)
+sensor: u_sci_dbd_sensor_list_xmit_control(enum)  	2	# transmit header if THIS glider hasn't sent it before (for persistor only)
 
 #ALTIMETER SETTINGS
-sensor:	u_alt_min_depth(m)	      150   # how deep glider must be to use the altimeter
+sensor:	u_alt_min_depth(m)	       40   # how deep glider must be to use the altimeter
 sensor: u_alt_reduced_usage_mode(bool)  1   # Set to 1 for on (only turn on altimeter when necessary), 0 for off (altimeter always on)
-sensor: u_alt_reqd_good_in_a_row(nodim) 3   # how many in a row we require before accepting reading
+sensor: u_alt_reqd_good_in_a_row(nodim) 1   # how many in a row we require before accepting reading
 sensor: u_alt_filter_enabled(bool)      1   # enable median filter depth for altitude
 
 #DIGIFIN SETTINGS
 sensor: u_digifin_hide_oddities_at_surface(bool)	        1       # prevents oddities from reporting. 
-sensor: u_digifin_mask_movement_warning_at_surface(bool)	1	# does not create movement warning at surface. 
+#sensor: u_digifin_mask_movement_warning_at_surface(bool)	1	# does not create movement warning at surface. (does not apply to persistor) 
 sensor: u_digifin_leakdetect_count(int)	                       10	# need this many consecutive readings to abort.
 
 ################################################################################
@@ -68,6 +73,11 @@ behavior: abend
 
    #WAYPOINT TOO FAR ABORT: 50000 m
     b_arg: max_wpt_distance(m)              50000 # Maximum allowable distance to a waypoint
+   
+   #PERSISTORY ONLY 
+    b_arg: max_allowable_busy_cpu_cycles(cycles)	75
+    b_arg: reqd_spare_heap(bytes)      30000  # added from talking with glidersupport 7/24/19 due to 8.3
+
 
 ################################################################################
 # surface_2
@@ -155,8 +165,8 @@ behavior: abend
 ############
 
    # Sample Nortek -set to sample
-# behavior: sample
-#    b_arg: args_from_file(enum) 64  # c_ad2cp_on
+ behavior: sample
+    b_arg: args_from_file(enum) 64  # c_ad2cp_on
 ################################################################################
 # sample_15
 ############
@@ -176,8 +186,8 @@ behavior: abend
 ############
 
    # Sample Williamson camera -set to sample
- behavior: sample
-    b_arg: args_from_file(enum) 87  # c_solocam_on On STM glider ver 10+
+# behavior: sample
+#    b_arg: args_from_file(enum) 87  # c_solocam_on On STM glider ver 10+
 ################################################################################
 # sample_18
 ############
